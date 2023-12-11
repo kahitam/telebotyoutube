@@ -1,7 +1,32 @@
+import asyncio
 import os
+import sys
+import urllib.request
+import json
+from logging import INFO, basicConfig, getLogger
+from dotenv import load_dotenv
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from googleapiclient.discovery import build
 from datetime import datetime
 import sqlalchemy as db
 
+load_dotenv()
+
+YT_API_KEY = os.getenv('YT_API_KEY')
+
+sch = AsyncIOScheduler()
+MEMORY = []
+
+basicConfig(format="[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s", level=INFO)
+LOGS = getLogger(__name__)
+
+try:
+    YT = build("youtube", "v3", developerKey=YT_API_KEY)
+    LOGS.info("Successfully Connected With YouTube...")
+except BaseException as er:
+    LOGS.info(str(er))
+    exit()
 
 engine = db.create_engine("sqlite:///db.sqlite3")
 connection = engine.connect()
@@ -21,12 +46,33 @@ except:
                         )
     metadata.create_all(engine)
 
+def dur_parser(_time):
+    if not _time:
+        return "Not Found!"
+    xx = _time.replace("PT", "")
+    return xx.lower()
+
+# Get Channel Information
+def channel_info(channelName):
+    url = 'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='+channelName+'&type=channel&key='+YT_API_KEY
+    response = urllib.request.urlopen(url)
+    data = json.load(response)
+    for key in data['items']:
+        channelId = key['id']['channelId']
+
+    info = YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
+    return info
+    #return (
+    #    YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
+    #)
+
+
 # Handle response message save to Channels table
 def handle_response(text, user, message_id) -> str:
     splitTexts = str.split(text)
-    print(splitTexts)
-    print('addchannel' in splitTexts)
+    channelName = splitTexts[-1]
     if ('addchannel' in splitTexts):
+        channel_info(channelName)
         response = 'dev handle response process..'
     else:
         # Need to create help commands response
