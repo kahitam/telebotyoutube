@@ -2,8 +2,9 @@ import os
 import logging
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from subprocess import call
+from yt_handler import handle_response
 
 print('Starting up bot...')
 
@@ -38,6 +39,21 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Let us user the /help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('This is help descriptions')
+    
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message_type = update.message.chat.type
+    text = str(update.message.text).lower()
+    user = update.message.from_user
+    message_id = update.message.message_id
+    response = ''
+    
+    # Print a log for debugging
+    print(f'User ({update.message.chat.id}) says: "{text}" in: {message_type}')
+    
+    if text.startswith(BOTNAME):
+        print('got the bot name: ' + BOTNAME)
+        response = handle_response(text, user, message_id)
+    await update.message.reply_text(response)
 
 @user_allowed(sUsers)
 async def channelinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,5 +67,8 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('channelinfo', channelinfo_command))
     app.add_handler(CommandHandler('help', help_command))
+    
+    # Messages
+    app.add_handler(MessageHandler(filters.ALL, handle_message))
 
     app.run_polling()
