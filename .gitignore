@@ -1,4 +1,5 @@
 # Byte-compiled
 __pycache__/
 
+db.*
 .env
