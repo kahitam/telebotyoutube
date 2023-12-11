@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from subprocess import call
 from yt_handler import handle_response
+import sqlalchemy as db
 
 print('Starting up bot...')
 
@@ -55,9 +56,39 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = handle_response(text, user, message_id)
     await update.message.reply_text(response)
 
+# Lets us use the /channelinfo
 @user_allowed(sUsers)
 async def channelinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('List of Channel info')
+
+# Lets us use the /restart
+@user_allowed(sUsers)
+async def restart_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # delete the db.sqlite3 file
+    engine = db.create_engine("sqlite:///db.sqlite3")
+    connection = engine.connect()
+    metadata = db.MetaData()
+
+    try:
+        channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
+    except:
+        channels = db.Table('channels',
+                        metadata,
+                        db.Column('id', db.Integer, primary_key=True),
+                        db.Column('user_id', db.Integer),
+                        db.Column('user_name', db.String),
+                        db.Column('channel_id', db.Integer),
+                        db.Column('channel_name', db.String),
+                        db.Column('created_at', db.DateTime, default=datetime.now)
+                        )
+    metadata.create_all(engine)
+
+    # delete all rows
+    query = db.delete(channels)
+    ResultProxy = connection.execute(query)
+    print('Deleted all rows from channels table')
+
+    await update.message.reply_text('Restarted the bot.')
 
 
 if __name__ == '__main__':
@@ -66,6 +97,7 @@ if __name__ == '__main__':
     # Commands
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('channelinfo', channelinfo_command))
+    app.add_handler(CommandHandler('restart', restart_command))
     app.add_handler(CommandHandler('help', help_command))
     
     # Messages
