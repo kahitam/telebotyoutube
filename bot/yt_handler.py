@@ -13,6 +13,8 @@ import sqlalchemy as db
 
 load_dotenv()
 
+api_service_name = "youtube"
+api_version = "v3"
 YT_API_KEY = os.getenv('YT_API_KEY')
 
 sch = AsyncIOScheduler()
@@ -22,7 +24,7 @@ basicConfig(format="[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s", level=
 LOGS = getLogger(__name__)
 
 try:
-    YT = build("youtube", "v3", developerKey=YT_API_KEY)
+    YT = build(api_service_name, api_version, developerKey=YT_API_KEY)
     LOGS.info("Successfully Connected With YouTube...")
 except BaseException as er:
     LOGS.info(str(er))
@@ -72,7 +74,8 @@ def handle_response(text, user, message_id) -> str:
     splitTexts = str.split(text)
     channelName = splitTexts[-1]
     if ('addchannel' in splitTexts):
-        channel_info(channelName)
+        info = channel_info(channelName)
+        print(info)
         response = 'dev handle response process..'
     else:
         # Need to create help commands response
