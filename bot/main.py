@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Messa
 from subprocess import call
 import sqlalchemy as db
 
-from youtube_handler import handle_response
+from youtube_handler import handle_response, clear_channels
 from logs_handler import LOGS
 
 print('Starting up bot...')
@@ -59,31 +59,8 @@ async def channelinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 # Lets us use the /restart
 @user_allowed(sUsers)
-async def restart_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # delete the db.sqlite3 file
-    engine = db.create_engine("sqlite:///db.sqlite3")
-    connection = engine.connect()
-    metadata = db.MetaData()
-
-    try:
-        channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
-    except:
-        channels = db.Table('channels',
-                        metadata,
-                        db.Column('id', db.Integer, primary_key=True),
-                        db.Column('user_id', db.Integer),
-                        db.Column('user_name', db.String),
-                        db.Column('channel_id', db.Integer),
-                        db.Column('channel_name', db.String),
-                        db.Column('created_at', db.DateTime, default=datetime.now)
-                        )
-    metadata.create_all(engine)
-
-    # delete all rows
-    query = db.delete(channels)
-    ResultProxy = connection.execute(query)
-    print('Deleted all rows from channels table')
-
+async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    clear_channels()
     await update.message.reply_text('Restarted the bot.')
 
 
@@ -93,7 +70,7 @@ if __name__ == '__main__':
     # Commands
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('channelinfo', channelinfo_command))
-    app.add_handler(CommandHandler('restart', restart_command))
+    app.add_handler(CommandHandler('clear', clear_command))
     app.add_handler(CommandHandler('help', help_command))
     
     # Messages

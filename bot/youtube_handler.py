@@ -32,10 +32,7 @@ engine = db.create_engine("sqlite:///db.sqlite3")
 connection = engine.connect()
 metadata = db.MetaData()
 
-try:
-    channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
-except:
-    channels = db.Table('channels',
+channelTable = db.Table('channels',
                         metadata,
                         db.Column('id', db.Integer, primary_key=True),
                         db.Column('user_id', db.Integer),
@@ -44,6 +41,11 @@ except:
                         db.Column('channel_name', db.String),
                         db.Column('created_at', db.DateTime, default=datetime.now)
                         )
+
+try:
+    channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
+except:
+    channels = channelTable
     metadata.create_all(engine)
 
 def dur_parser(_time):
@@ -51,6 +53,18 @@ def dur_parser(_time):
         return "Not Found!"
     xx = _time.replace("PT", "")
     return xx.lower()
+
+# Clear table channels
+def clear_channels():
+    try:
+        channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
+    except:
+        channels = channelTable
+        metadata.create_all(engine)
+    # delete all rows
+    query = db.delete(channels)
+    ResultProxy = connection.execute(query)
+    LOGS.info('Deleted all rows from channels table')
 
 # Get Channel Information
 def channel_info(channelName):
@@ -64,18 +78,16 @@ def channel_info(channelName):
     for key in data['items']:
         channelId = key['id']['channelId']
 
-    info = YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
-    return info
-    #return (
-    #    YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
-    #)
+    return (
+        YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
+    )
 
 
 # Handle response message save to Channels table
 def handle_response(text, user, message_id) -> str:
     splitTexts = str.split(text)
-    channelName = splitTexts[-1]
     if ('addchannel' in splitTexts):
+        channelName = splitTexts[-1]
         info = channel_info(channelName)
         if (info == None):
             response = "Sorry, I can't find the channel"
