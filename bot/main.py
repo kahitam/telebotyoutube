@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from subprocess import call
-from yt_handler import handle_response
+from youtube_handler import handle_response
 import sqlalchemy as db
 
 print('Starting up bot...')
