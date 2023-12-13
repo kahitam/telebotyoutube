@@ -1,11 +1,12 @@
 import os
-import logging
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from subprocess import call
-from youtube_handler import handle_response
 import sqlalchemy as db
+
+from youtube_handler import handle_response
+from logs_handler import LOGS
 
 print('Starting up bot...')
 
@@ -15,17 +16,12 @@ TOKEN = os.getenv('TELEGRAM_TOKEN')
 BOTNAME = os.getenv('BOTNAME')
 sUsers = os.getenv('SUPERUSERS')
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-
 # Create a decorator that takes users as an argument and if the user is in the list, it will run the function
 def user_allowed(susers):
     def decorator(func):
         async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user = update.message.from_user
-            logging.info(f'User {user.username} is trying to access the bot. id: {user.id}, message: {update.message.text}')
+            LOGS.info(f'User {user.username} is trying to access the bot. id: {user.id}, message: {update.message.text}')
             if user.username in sUsers:
                 await func(update, context)
             else:

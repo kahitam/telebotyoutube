@@ -3,13 +3,14 @@ import os
 import sys
 import urllib.request
 import json
-from logging import INFO, basicConfig, getLogger
 from dotenv import load_dotenv
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from googleapiclient.discovery import build
 from datetime import datetime
 import sqlalchemy as db
+
+from logs_handler import LOGS
 
 load_dotenv()
 
@@ -19,9 +20,6 @@ YT_API_KEY = os.getenv('YT_API_KEY')
 
 sch = AsyncIOScheduler()
 MEMORY = []
-
-basicConfig(format="[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s", level=INFO)
-LOGS = getLogger(__name__)
 
 try:
     YT = build(api_service_name, api_version, developerKey=YT_API_KEY)
