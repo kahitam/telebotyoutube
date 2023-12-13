@@ -57,6 +57,10 @@ def channel_info(channelName):
     url = 'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='+channelName+'&type=channel&key='+YT_API_KEY
     response = urllib.request.urlopen(url)
     data = json.load(response)
+
+    if not data['items']:
+        return None
+
     for key in data['items']:
         channelId = key['id']['channelId']
 
@@ -73,8 +77,10 @@ def handle_response(text, user, message_id) -> str:
     channelName = splitTexts[-1]
     if ('addchannel' in splitTexts):
         info = channel_info(channelName)
-        print(info)
-        response = 'dev handle response process..'
+        if (info == None):
+            response = "Sorry, I can't find the channel"
+        else:
+            response = 'dev handle response process..'
     else:
         # Need to create help commands response
         response = 'Wrong commands!'
