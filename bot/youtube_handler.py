@@ -3,12 +3,13 @@ import os
 import sys
 import urllib.request
 import json
+import numpy as np
 from dotenv import load_dotenv
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from googleapiclient.discovery import build
 from datetime import datetime
-import sqlalchemy as db
+import sqlalchemy as db, sqlite3
 
 from logs_handler import LOGS
 
@@ -78,10 +79,29 @@ def channel_info(channelName):
     for key in data['items']:
         channelId = key['id']['channelId']
 
-    return (
-        YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
-    )
+    info = YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
+    return info['items'][0]
 
+# Save channels
+def save_channel(channelName, user):
+    con = sqlite3.Connection('db.sqlite3')
+    cursor = con.cursor()
+    
+    now = datetime.now()
+    info = channel_info(channelName)
+    if (info == None):
+        return "Sorry, I can't find the channel"
+    else:
+        chid = info['id']
+        sql_select_query = """select channel_id, channel_name from channels where channel_id = ?"""
+        record = cursor.execute(sql_select_query, (chid,))
+        if record.fetchone() is None:
+            query = db.insert(channels).values(user_id=user.id, user_name=user.username, channel_id=chid, channel_name=channelName, created_at=now)
+            ResultProxy = connection.execute(query)
+            LOGS.info(ResultProxy.inserted_primary_key)
+            return f'Channel {channelName} has been added.'
+        else:
+            return 'The channel is already on the list'
 
 # Handle response message save to Channels table
 def handle_response(text, user, message_id) -> str:
@@ -92,7 +112,11 @@ def handle_response(text, user, message_id) -> str:
         if (info == None):
             response = "Sorry, I can't find the channel"
         else:
-            response = 'dev handle response process..'
+            result = save_channel(info, channelName, user)
+            if result == True:
+                response = f'Channel {channelName} has been added.'
+            else:
+                response = 'The channel already in list'
     else:
         # Need to create help commands response
         response = 'Wrong commands!'

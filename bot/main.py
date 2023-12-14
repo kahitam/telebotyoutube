@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Messa
 from subprocess import call
 import sqlalchemy as db
 
-from youtube_handler import handle_response, clear_channels
+from youtube_handler import save_channel, clear_channels
 from logs_handler import LOGS
 
 print('Starting up bot...')
@@ -33,28 +33,30 @@ def user_allowed(susers):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f'Hello {update.effective_user.first_name} I\'m a bot')
 
+async def addchannel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+    msg = str(update.message.text).lower()
+    arr = msg.split(' ')
+    if len(arr) == 2:
+        response = save_channel(arr[-1], user)
+    elif len(arr) == 1:
+        response = f'Empty channelName! \n /addchannel <channelName>'
+    else:
+        response = f"Wrong command! \n /addchannel <channelName>"
+    await update.message.reply_text(response)
+
 # Let us user the /help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('This is help descriptions')
-    
+
+# Handle body messsage
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message_type = update.message.chat.type
-    text = str(update.message.text).lower()
-    user = update.message.from_user
-    message_id = update.message.message_id
-    response = ''
-    
-    # Print a log for debugging
-    print(f'User ({update.message.chat.id}) says: "{text}" in: {message_type}')
-    
-    if text.startswith(BOTNAME):
-        print('got the bot name: ' + BOTNAME)
-        response = handle_response(text, user, message_id)
+    response = 'body message...'
     await update.message.reply_text(response)
 
 # Lets us use the /channelinfo
 @user_allowed(sUsers)
-async def channelinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def channels_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('List of Channel info')
 
 # Lets us use the /restart
@@ -69,7 +71,8 @@ if __name__ == '__main__':
 
     # Commands
     app.add_handler(CommandHandler('start', start_command))
-    app.add_handler(CommandHandler('channelinfo', channelinfo_command))
+    app.add_handler(CommandHandler('channels', channels_command))
+    app.add_handler(CommandHandler('addchannel', addchannel_command))
     app.add_handler(CommandHandler('clear', clear_command))
     app.add_handler(CommandHandler('help', help_command))
     
