@@ -75,9 +75,8 @@ def channel_info(channelName):
 
     if not data['items']:
         return None
-
-    for key in data['items']:
-        channelId = key['id']['channelId']
+    res = data['items'][0]
+    channelId = res['id']['channelId']
 
     info = YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
     return info['items'][0]
@@ -95,10 +94,23 @@ def save_channel(channelName, user):
         chid = info['id']
         sql_select_query = """select channel_id, channel_name from channels where channel_id = ?"""
         record = cursor.execute(sql_select_query, (chid,))
-        if record.fetchone() is None:
+        result = record.fetchone()
+        if not result:
             query = db.insert(channels).values(user_id=user.id, user_name=user.username, channel_id=chid, channel_name=channelName, created_at=now)
             ResultProxy = connection.execute(query)
             LOGS.info(ResultProxy.inserted_primary_key)
             return f'Channel {channelName} has been added.'
         else:
             return 'The channel is already on the list'
+
+def channel_list():
+    con = sqlite3.Connection('db.sqlite3')
+    cursor = con.cursor()
+    sql_query = """select * from channels"""
+    cursor.execute(sql_query)
+    results = cursor.fetchall()
+    print(results)
+    res = []
+    for row in results:
+        res.append(f"Id: {row[0]}  Name: {row[4]}")
+    print(res)
