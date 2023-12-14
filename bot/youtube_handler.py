@@ -82,7 +82,7 @@ def channel_info(channelName):
     info = YT.channels().list(part="statistics,snippet,contentDetails", id=channelId).execute()
     return info['items'][0]
 
-# Save channels
+# Save channel
 def save_channel(channelName, user):
     con = sqlite3.Connection('db.sqlite3')
     cursor = con.cursor()
@@ -102,22 +102,3 @@ def save_channel(channelName, user):
             return f'Channel {channelName} has been added.'
         else:
             return 'The channel is already on the list'
-
-# Handle response message save to Channels table
-def handle_response(text, user, message_id) -> str:
-    splitTexts = str.split(text)
-    if ('addchannel' in splitTexts):
-        channelName = splitTexts[-1]
-        info = channel_info(channelName)
-        if (info == None):
-            response = "Sorry, I can't find the channel"
-        else:
-            result = save_channel(info, channelName, user)
-            if result == True:
-                response = f'Channel {channelName} has been added.'
-            else:
-                response = 'The channel already in list'
-    else:
-        # Need to create help commands response
-        response = 'Wrong commands!'
-    return response
