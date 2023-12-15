@@ -122,8 +122,7 @@ def channel_list():
     sql_query = """select * from channels"""
     cursor.execute(sql_query)
     results = cursor.fetchall()
-    print(results)
     res = []
     for row in results:
         res.append(f"Id: {row[0]}  Name: {row[4]}")
-    print(res)
+    return "\n".join(map(str, res))

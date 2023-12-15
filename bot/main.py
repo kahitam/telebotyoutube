@@ -63,8 +63,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Lets us use the /channels
 @user_allowed(sUsers)
 async def channels_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    channel_list()
-    await update.message.reply_text('List of Channel info')
+    results = channel_list()
+    response = 'List of Channels \n\n' + results
+    await update.message.reply_text(response)
 
 # Lets us use the /restart
 @user_allowed(sUsers)
