@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Messa
 from subprocess import call
 import sqlalchemy as db
 
-from youtube_handler import save_channel, clear_channels, channel_list
+from youtube_handler import save_channel, clear_channels, channel_list, remove_channel
 from logs_handler import LOGS
 
 print('Starting up bot...')
@@ -48,7 +48,7 @@ async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
             response = save_channel(arr[-1], user)
         if 'remove' in arr:
             print(arr[-1])
-            response = 'delete command'
+            response = remove_channel(arr[-1])
     await update.message.reply_text(response)
 
 # Let us user the /help command

@@ -3,7 +3,6 @@ import os
 import sys
 import urllib.request
 import json
-import numpy as np
 from dotenv import load_dotenv
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -102,6 +101,20 @@ def save_channel(channelName, user):
             return f'Channel {channelName} has been added.'
         else:
             return 'The channel is already on the list'
+
+# Delete/Remove channel by id
+def remove_channel(id):
+    con = sqlite3.connect('db.sqlite3')
+    cursor = con.cursor()
+    sql_delete_query = """DELETE FROM channels WHERE id=?"""
+    cursor.execute(sql_delete_query, (id,))
+    if cursor.rowcount > 0:
+        response = f'Record id {id} deleted successfully'
+        con.commit()
+    else:
+        response = f'No channel found with id: {id}'
+    con.close()
+    return response
 
 def channel_list():
     con = sqlite3.Connection('db.sqlite3')
