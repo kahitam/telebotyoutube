@@ -1,14 +1,20 @@
+from youtube_handler import(
+    save_channel_into_table,
+    clear_channels,
+    channel_list,
+    remove_channel,
+    get_channels,
+    video_info
+)
+from logs_handler import LOGS
+
 import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
-from subprocess import call
+#from subprocess import call
 import sqlalchemy as db
-
-from youtube_handler import save_channel, clear_channels, channel_list, remove_channel
-from logs_handler import LOGS
-
-print('Starting up bot...')
+import feedparser
 
 load_dotenv()
 
@@ -37,6 +43,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # /channel add
 # /channel remove
 async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
+    chatId = update.message.chat_id
     user = update.message.from_user
     msg = str(update.message.text).lower()
     arr = msg.split(' ')
@@ -45,7 +52,7 @@ async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
         '/channel remove <channelName>'
     if len(arr) == 3:
         if 'add' in arr:
-            response = save_channel(arr[-1], user)
+            response = save_channel_into_table(arr[-1], user, chatId)
         if 'remove' in arr:
             print(arr[-1])
             response = remove_channel(arr[-1])
@@ -73,9 +80,62 @@ async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     clear_channels()
     await update.message.reply_text('Restarted the bot.')
 
+def proper_info_msg(videoId):
+    video = video_info(videoId)
+    info = video["items"][0]
+    channelName = info["snippet"]["channelTitle"]
+    videoTitle = info["snippet"]["title"]
+    try:
+        desc = info["snippet"]["description"]
+        if len(desc) > 500:
+            desc = desc[:300] + "..."
+    except BaseException:
+        desc = "Not Found!"
+    pub_time = info["snippet"]["publishedAt"].replace("T", " ").replace("Z", " ")
+    try:
+        thumb = info["snippet"]["thumbnails"]["maxres"]["url"]
+    except BaseException:
+        thumb = info["snippet"]["thumbnails"]["high"]["url"]
+    os.system(f"wget {thumb} -O {thumb.split('/')[-2]}.jpg")
+    try:
+        dur = dur_parser(info["contentDetails"]["duration"])
+    except BaseException:
+        dur = "Not Found!"
+    text = ""
+    text += f"https://www.youtube.com/watch?v={videoId}" + "\n"
+    if info["snippet"]["liveBroadcastContent"] == "live":
+        text += f"**{channelName} is Live 🔴**\n\n"
+        dur = "♾"
+    else:
+        text += f"**{channelName} Just Uploaded A Video**\n\n"
+    text += f"{videoTitle}\n\n"
+    text += f"Description - {desc}\n\n"
+    text += f"Published At - {pub_time}```\n"
+    results = []
+    results.insert(0, thumb)
+    results.insert(1, text)
+    return results
+
+async def callback_minute(context: ContextTypes.DEFAULT_TYPE):
+    results = get_channels()
+    if results:
+        for res in results:
+            chId = res[4]
+            chatId = res[1]
+            feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={chId}"
+            feed = feedparser.parse(feed_url)
+            videoId = feed.entries[0].yt_videoid
+            videos = proper_info_msg(videoId)
+            await context.bot.send_photo(
+                chat_id=chatId,
+                photo=videos[0],
+                caption=videos[1]
+            )
 
 if __name__ == '__main__':
+    print('Starting up bot...')
     app = ApplicationBuilder().token(TOKEN).build()
+    job_queue = app.job_queue
 
     # Commands
     app.add_handler(CommandHandler('start', start_command))
@@ -84,7 +144,9 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('clear', clear_command))
     app.add_handler(CommandHandler('help', help_command))
     
+    job_queue.run_repeating(callback_minute, interval=60, first=10)
+
     # Messages
-    app.add_handler(MessageHandler(filters.ALL, handle_message))
+    '''app.add_handler(MessageHandler(filters.ALL, handle_message))'''
 
     app.run_polling()
