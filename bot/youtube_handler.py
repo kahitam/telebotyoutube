@@ -9,6 +9,7 @@ import feedparser
 from googleapiclient.discovery import build
 from datetime import datetime
 import sqlalchemy as db, sqlite3
+from sqlalchemy.exc import SQLAlchemyError
 
 from logs_handler import LOGS
 
@@ -32,9 +33,7 @@ connection = engine.connect()
 metadata = db.MetaData()
 
 try:
-    channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
-except:
-    channelTable = db.Table('channels',
+    channels = db.Table('channels',
                         metadata,
                         db.Column('id', db.Integer, primary_key=True),
                         db.Column('chat_id', db.String),
@@ -44,8 +43,17 @@ except:
                         db.Column('channel_name', db.String),
                         db.Column('created_at', db.DateTime, default=datetime.now)
                         )
-    channels = channelTable
+    notificationTable = db.Table('notifications',
+                        metadata,
+                        db.Column('id', db.Integer, primary_key=True),
+                        db.Column('chat_id', db.String),
+                        db.Column('video_id', db.String),
+                        db.Column('published_at', db.DateTime),
+                        db.Column('created_at', db.DateTime, default=datetime.now)
+                        )
     metadata.create_all(engine)
+except SQLAlchemyError as e:
+    error = str(e.orig)
 
 def dur_parser(_time):
     if not _time:
