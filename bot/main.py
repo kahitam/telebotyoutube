@@ -1,12 +1,13 @@
 from youtube_handler import(
-    save_channel_into_table,
+    dur_parser,
     clear_channels,
     channel_list,
-    remove_channel,
     get_channels,
-    video_info,
+    get_notify_history,
+    remove_channel,
+    save_channel_into_table,
     save_notification,
-    get_notify_history
+    video_info
 )
 from logs_handler import LOGS
 
@@ -44,6 +45,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Let us use the /channel command
 # /channel add
 # /channel remove
+@user_allowed(sUsers)
 async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
     chatId = update.message.chat_id
     user = update.message.from_user
@@ -70,7 +72,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response)
 
 # Lets us use the /channels
-@user_allowed(sUsers)
 async def channels_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     results = channel_list(context._chat_id)
     response = 'List of Channels \n\n' + results
@@ -112,6 +113,7 @@ def proper_info_msg(videoId):
         text += f"**{channelName} Just Uploaded A Video**\n\n"
     text += f"{videoTitle}\n\n"
     text += f"Description - {desc}\n\n"
+    text += f"Duration - {dur}\n"
     text += f"Published At - {pub_time}```\n"
     results = []
     results.insert(0, thumb)
@@ -128,8 +130,8 @@ async def callback_minute(context: ContextTypes.DEFAULT_TYPE):
             feed = feedparser.parse(feed_url)
             videoId = feed.entries[0].yt_videoid
             videos = proper_info_msg(videoId)
-            notif = get_notify_history(chatId=chatId, videoId=videoId)
-            if not notif:
+            notify = get_notify_history(chatId=chatId, videoId=videoId)
+            if not notify:
                 save_notification(chatId=chatId, videoId=videoId)
                 await context.bot.send_photo(
                     chat_id=chatId,

@@ -1,10 +1,7 @@
-import asyncio
 import os
-import sys
 import urllib.request
 import json
 from dotenv import load_dotenv
-import feedparser
 
 from googleapiclient.discovery import build
 from datetime import datetime
@@ -18,8 +15,6 @@ load_dotenv()
 api_service_name = "youtube"
 api_version = "v3"
 YT_API_KEY = os.getenv('YT_API_KEY')
-
-MEMORY = []
 
 try:
     YT = build(api_service_name, api_version, developerKey=YT_API_KEY)
@@ -70,7 +65,7 @@ def clear_channels(chatId):
     LOGS.info('Deleted all rows from channels table')
     con.commit()
 
-# Get Channel Information
+# Get Channel Information by Name
 def get_channel_info_byName(channelName):
     url = 'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q='+channelName+'&type=channel&key='+YT_API_KEY
     response = urllib.request.urlopen(url)
@@ -99,7 +94,14 @@ def save_channel_into_table(channelName, user, chatId):
         record = cursor.execute(sql_select_query, (chid, chatId,))
         result = record.fetchone()
         if not result:
-            query = db.insert(channels).values(chat_id=chatId, user_id=user.id, user_name=user.username, channel_id=chid, channel_name=channelName, created_at=now)
+            query = db.insert(channels).values(
+                chat_id=chatId,
+                user_id=user.id,
+                user_name=user.username,
+                channel_id=chid,
+                channel_name=channelName,
+                created_at=now
+            )
             ResultProxy = connection.execute(query)
             LOGS.info(ResultProxy.inserted_primary_key)
             return f'Channel {channelName} has been added.'
@@ -143,9 +145,10 @@ def channel_list(chatId):
 # Saving Notification history
 def save_notification(chatId, videoId):
     query = db.insert(notifications).values(chat_id=chatId, video_id=videoId)
-    result = connection.execute(query)
+    connection.execute(query)
     LOGS.info(f'Save notify video_id: {videoId} for chat_id: {chatId}')
 
+# Get Notification history
 def get_notify_history(chatId, videoId):
     con = sqlite3.Connection('db.sqlite3')
     cursor = con.cursor()
