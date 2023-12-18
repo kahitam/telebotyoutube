@@ -43,7 +43,7 @@ try:
                         db.Column('channel_name', db.String),
                         db.Column('created_at', db.DateTime, default=datetime.now)
                         )
-    notificationTable = db.Table('notifications',
+    notifications = db.Table('notifications',
                         metadata,
                         db.Column('id', db.Integer, primary_key=True),
                         db.Column('chat_id', db.String),
@@ -139,6 +139,21 @@ def channel_list(chatId):
     for row in results:
         res.append(f"Id: {row[0]}  Name: {row[5]}")
     return "\n".join(map(str, res))
+
+# Saving Notification history
+def save_notification(chatId, videoId):
+    query = db.insert(notifications).values(chat_id=chatId, video_id=videoId)
+    result = connection.execute(query)
+    LOGS.info(f'Save notify video_id: {videoId} for chat_id: {chatId}')
+
+def get_notify_history(chatId, videoId):
+    con = sqlite3.Connection('db.sqlite3')
+    cursor = con.cursor()
+    query = """SELECT * FROM notifications WHERE chat_id = ? AND video_id = ?"""
+    cursor.execute(query, (chatId, videoId,))
+    result = cursor.fetchone()
+    print(result)
+    return result
 
 # Get video info
 def video_info(_id):

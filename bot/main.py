@@ -4,7 +4,9 @@ from youtube_handler import(
     channel_list,
     remove_channel,
     get_channels,
-    video_info
+    video_info,
+    save_notification,
+    get_notify_history
 )
 from logs_handler import LOGS
 
@@ -126,11 +128,14 @@ async def callback_minute(context: ContextTypes.DEFAULT_TYPE):
             feed = feedparser.parse(feed_url)
             videoId = feed.entries[0].yt_videoid
             videos = proper_info_msg(videoId)
-            await context.bot.send_photo(
-                chat_id=chatId,
-                photo=videos[0],
-                caption=videos[1]
-            )
+            notif = get_notify_history(chatId=chatId, videoId=videoId)
+            if not notif:
+                save_notification(chatId=chatId, videoId=videoId)
+                await context.bot.send_photo(
+                    chat_id=chatId,
+                    photo=videos[0],
+                    caption=videos[1]
+                )
 
 if __name__ == '__main__':
     print('Starting up bot...')
