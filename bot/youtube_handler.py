@@ -62,16 +62,13 @@ def dur_parser(_time):
     return xx.lower()
 
 # Clear table channels
-def clear_channels():
-    try:
-        channels = db.Table('channels', metadata, autoload=True, autoload_with=engine)
-    except:
-        channels = channelTable
-        metadata.create_all(engine)
-    # delete all rows
-    query = db.delete(channels)
-    ResultProxy = connection.execute(query)
+def clear_channels(chatId):
+    con = sqlite3.connect('db.sqlite3')
+    c = con.cursor()
+    query = """DELETE FROM channels WHERE chat_id = ?"""
+    c.execute(query, (chatId,))
     LOGS.info('Deleted all rows from channels table')
+    con.commit()
 
 # Get Channel Information
 def get_channel_info_byName(channelName):
@@ -132,11 +129,11 @@ def get_channels():
     return results
 
 # Channel List
-def channel_list():
+def channel_list(chatId):
     con = sqlite3.Connection('db.sqlite3')
     cursor = con.cursor()
-    sql_query = """select * from channels"""
-    cursor.execute(sql_query)
+    sql_query = """select * from channels where chat_id = ?"""
+    cursor.execute(sql_query, (chatId,))
     results = cursor.fetchall()
     res = []
     for row in results:

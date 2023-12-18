@@ -70,14 +70,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Lets us use the /channels
 @user_allowed(sUsers)
 async def channels_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    results = channel_list()
+    results = channel_list(context._chat_id)
     response = 'List of Channels \n\n' + results
     await update.message.reply_text(response)
 
 # Lets us use the /restart
 @user_allowed(sUsers)
 async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    clear_channels()
+    clear_channels(context._chat_id)
     await update.message.reply_text('Restarted the bot.')
 
 def proper_info_msg(videoId):
