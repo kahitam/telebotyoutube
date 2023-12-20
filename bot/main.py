@@ -118,6 +118,7 @@ def proper_info_msg(videoId):
     results = []
     results.insert(0, thumb)
     results.insert(1, text)
+    os.remove(f"{thumb.split('/')[-2]}.jpg")
     return results
 
 async def callback_minute(context: ContextTypes.DEFAULT_TYPE):
