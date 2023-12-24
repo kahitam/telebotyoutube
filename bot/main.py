@@ -15,7 +15,6 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
-#from subprocess import call
 import sqlalchemy as db
 import feedparser
 
@@ -45,7 +44,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Let us use the /channel command
 # /channel add
 # /channel remove
-@user_allowed(sUsers)
+'''@user_allowed(sUsers)'''
 async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
     chatId = update.message.chat_id
     user = update.message.from_user
