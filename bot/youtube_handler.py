@@ -137,9 +137,10 @@ def channel_list(chatId):
     sql_query = """select * from channels where chat_id = ?"""
     cursor.execute(sql_query, (chatId,))
     results = cursor.fetchall()
+    print(results)
     res = []
     for row in results:
-        res.append(f"Id: {row[0]}  Name: {row[5]}")
+        res.append(f"Id: {row[0]}  Name: {row[5]} owner: {row[3]}")
     return "\n".join(map(str, res))
 
 # Saving Notification history

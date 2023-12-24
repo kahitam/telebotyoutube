@@ -39,7 +39,10 @@ def user_allowed(susers):
 
 # Let us use the /start command
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f'Hello {update.effective_user.first_name} I\'m a bot')
+    firstName = update.effective_user.first_name
+    response = f"Hello {firstName}. \n" \
+        "I\'m a YouTube notification bot"
+    await update.message.reply_text(response)
 
 # Let us use the /channel command
 # /channel add
@@ -63,7 +66,9 @@ async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Let us user the /help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('This is help descriptions')
+    response = "/channels : List all channels \n" \
+        "/channel : <add> or <remove> command"
+    await update.message.reply_text(response)
 
 # Handle body messsage
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
