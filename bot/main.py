@@ -22,6 +22,7 @@ load_dotenv()
 
 TOKEN = os.getenv('TELEGRAM_TOKEN')
 BOTNAME = os.getenv('BOTNAME')
+INTERVAL = os.getenv('INTERVAL_JOB')
 sUsers = os.getenv('SUPERUSERS')
 
 # Create a decorator that takes users as an argument and if the user is in the list, it will run the function
@@ -156,7 +157,7 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('clear', clear_command))
     app.add_handler(CommandHandler('help', help_command))
     
-    job_queue.run_repeating(callback_minute, interval=60, first=10)
+    job_queue.run_repeating(callback_minute, interval=int(INTERVAL), first=10)
 
     # Messages
     '''app.add_handler(MessageHandler(filters.ALL, handle_message))'''
