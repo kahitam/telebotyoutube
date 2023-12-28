@@ -56,7 +56,7 @@ async def channel_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
     arr = msg.split(' ')
     response = 'wrong commands! \n' \
         '/channel add <channelName> \n or \n' \
-        '/channel remove <channelName>'
+        '/channel remove <ID>'
     if len(arr) == 3:
         if 'add' in arr:
             response = save_channel_into_table(arr[-1], user, chatId)
