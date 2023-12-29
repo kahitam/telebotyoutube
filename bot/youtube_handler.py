@@ -104,6 +104,7 @@ def save_channel_into_table(channelName, user, chatId):
             )
             ResultProxy = connection.execute(query)
             LOGS.info(ResultProxy.inserted_primary_key)
+            connection.commit()
             return f'Channel {channelName} has been added.'
         else:
             return 'The channel is already on the list'
@@ -137,7 +138,6 @@ def channel_list(chatId):
     sql_query = """select * from channels where chat_id = ?"""
     cursor.execute(sql_query, (chatId,))
     results = cursor.fetchall()
-    print(results)
     res = []
     for row in results:
         res.append(f"Id: {row[0]}  Name: {row[5]} owner: {row[3]}")
@@ -148,6 +148,7 @@ def save_notification(chatId, videoId):
     query = db.insert(notifications).values(chat_id=chatId, video_id=videoId)
     connection.execute(query)
     LOGS.info(f'Save notify video_id: {videoId} for chat_id: {chatId}')
+    connection.commit()
 
 # Get Notification history
 def get_notify_history(chatId, videoId):
